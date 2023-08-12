@@ -1,4 +1,6 @@
 import numpy as np
+from IPython.display import Image
+import pydotplus
 
 class DecisionTreeNode:
     def __init__(self, gini, num_samples, num_samples_per_class, predicted_class):
@@ -90,3 +92,25 @@ class DecisionTree():
             else:
                 node = node.right
         return node.predicted_class
+    
+    def _export_tree(self, node, depth=0):
+        if node is None:
+            return ''
+
+        left_string = self._export_tree(node.left, depth + 1)
+        right_string = self._export_tree(node.right, depth + 1)
+
+        if node.left:
+            left_string = f'{depth} -> {depth + 1} [labeldistance=2.5, labelangle=45, headlabel="True"];\n' + left_string
+        if node.right:
+            right_string = f'{depth} -> {depth + 1} [labeldistance=2.5, labelangle=-45, headlabel="False"];\n' + right_string
+
+        return f'{depth} [label="X[{node.feature_index}] <= {node.threshold}\\nGini: {node.gini}\\nSamples: {node.num_samples}\\nValue: {node.num_samples_per_class}\\nClass: {node.predicted_class}"];\n' + left_string + right_string
+
+    def visualize_tree(self):
+        dot_data = 'digraph Tree {\nnode [shape=box] ;\n'
+        dot_data += self._export_tree(self.tree_)
+        dot_data += '}'
+
+        graph = pydotplus.graph_from_dot_data(dot_data)
+        return Image(graph.create_png())
